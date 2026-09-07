@@ -159,6 +159,10 @@ render.yaml            Render Blueprint
 requirements.txt       Python 依赖
 ```
 
+## 许可证
+
+本项目采用 [MIT License](LICENSE)，允许使用、修改和分发；使用视频平台内容时仍应遵守对应平台的规则与版权要求。
+
 ## 验证与排错
 
 ```powershell
