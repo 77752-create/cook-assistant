@@ -3,7 +3,6 @@ FROM python:3.12-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     CLOUD_MODE=1 \
-    COOK_PORT=8765 \
     COOK_DB=/data/recipes.db
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
@@ -17,4 +16,4 @@ COPY . .
 VOLUME /data
 EXPOSE 8765
 
-CMD ["gunicorn", "-b", "0.0.0.0:8765", "--workers", "1", "--threads", "8", "--timeout", "300", "app:app"]
+CMD ["sh", "-c", "export COOK_PORT=${PORT:-8765}; exec gunicorn -b 0.0.0.0:${COOK_PORT} --workers 1 --threads 8 --timeout 300 app:app"]

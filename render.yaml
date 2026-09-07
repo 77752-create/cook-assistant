@@ -4,7 +4,9 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/info
+    healthCheckPath: /health
     envVars:
       - key: CLOUD_MODE
         value: "1"
+      - key: APP_PASSWORD
+        sync: false

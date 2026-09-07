@@ -1,4 +1,6 @@
+import os
 import sys
+import tempfile
 import types
 import unittest
 from unittest.mock import patch
@@ -42,12 +44,40 @@ class CoreTests(unittest.TestCase):
 class AppTests(unittest.TestCase):
     def setUp(self):
         self.client = app.app.test_client()
+        self.original_db_path = app.DB_PATH
+        self.temp_dir = tempfile.TemporaryDirectory()
+        app.DB_PATH = os.path.join(self.temp_dir.name, "recipes.db")
+        app._init_db()
+
+    def tearDown(self):
+        app.DB_PATH = self.original_db_path
+        self.temp_dir.cleanup()
 
     def test_health_endpoint_is_available(self):
-        response = self.client.get("/api/info")
+        response = self.client.get("/health")
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json()["ok"])
+
+    def test_password_protects_application_but_not_health_check(self):
+        with patch.dict(os.environ, {"APP_PASSWORD": "test-password"}):
+            self.assertEqual(self.client.get("/").status_code, 401)
+            self.assertEqual(self.client.get("/health").status_code, 200)
+
+    def test_recipe_can_be_saved_read_and_deleted(self):
+        created = self.client.post("/api/recipes", json={
+            "title": "测试菜谱",
+            "source": "bilibili",
+            "organized": {"ingredients": {}, "steps": ["下锅翻炒"], "tips": []},
+        }).get_json()
+
+        recipe_id = created["id"]
+        loaded = self.client.get(f"/api/recipes/{recipe_id}").get_json()
+        deleted = self.client.delete(f"/api/recipes/{recipe_id}").get_json()
+
+        self.assertTrue(loaded["ok"])
+        self.assertEqual(loaded["recipe"]["title"], "测试菜谱")
+        self.assertTrue(deleted["ok"])
 
     def test_config_response_hides_credentials(self):
         config = {

@@ -2,14 +2,14 @@
 cd /d "%~dp0"
 chcp 65001 >nul
 
-rem Prefer the officially installed Python (signed, not blocked by Smart App Control)
-set "PYTHON=D:\Python\python.exe"
-if not exist "%PYTHON%" set "PYTHON=C:\Users\deng\AppData\Local\Programs\Python\Python313\python.exe"
-if not exist "%PYTHON%" set "PYTHON=C:\Python313\python.exe"
-if not exist "%PYTHON%" set "PYTHON=C:\Users\deng\AppData\Local\Programs\Python\Python312\python.exe"
-if not exist "%PYTHON%" set "PYTHON=C:\Python312\python.exe"
-if not exist "%PYTHON%" set "PYTHON=C:\Users\deng\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
-if not exist "%PYTHON%" set "PYTHON=python"
+where py >nul 2>&1
+if not errorlevel 1 (
+  set "PYTHON=py.exe"
+  set "PYTHON_ARGS=-3"
+) else (
+  set "PYTHON=python"
+  set "PYTHON_ARGS="
+)
 
 echo.
 echo Starting Cook Assistant ...
@@ -23,7 +23,7 @@ if not errorlevel 1 goto open
 
 rem Open the browser first, then start the server in the foreground (this window shows logs)
 start "" "http://127.0.0.1:8765"
-"%PYTHON%" app.py
+"%PYTHON%" %PYTHON_ARGS% app.py
 echo.
 echo Server stopped.
 pause

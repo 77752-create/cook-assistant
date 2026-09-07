@@ -1,20 +1,20 @@
 @echo off
 cd /d "%~dp0"
 
-rem Prefer the officially installed Python (signed, not blocked by Smart App Control)
-set "PYW=D:\Python\pythonw.exe"
-if not exist "%PYW%" set "PYW=C:\Users\deng\AppData\Local\Programs\Python\Python313\pythonw.exe"
-if not exist "%PYW%" set "PYW=C:\Python313\pythonw.exe"
-if not exist "%PYW%" set "PYW=C:\Users\deng\AppData\Local\Programs\Python\Python312\pythonw.exe"
-if not exist "%PYW%" set "PYW=C:\Python312\pythonw.exe"
-if not exist "%PYW%" set "PYW=C:\Users\deng\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\pythonw.exe"
-if not exist "%PYW%" set "PYW=pythonw"
+where pyw >nul 2>&1
+if not errorlevel 1 (
+  set "PYW=pyw"
+  set "PYW_ARGS=-3"
+) else (
+  set "PYW=pythonw"
+  set "PYW_ARGS="
+)
 
 rem If the server is already running, just open the browser
 netstat -ano | findstr ":8765" | findstr "LISTENING" >nul
 if not errorlevel 1 goto open
 
-start "" "%PYW%" "app.py"
+start "" "%PYW%" %PYW_ARGS% "app.py"
 timeout /t 3 /nobreak >nul
 
 :open

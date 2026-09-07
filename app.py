@@ -38,8 +38,8 @@ def _safe_config(cfg):
 @app.before_request
 def require_app_password():
     """Optional whole-site guard for a personal public deployment."""
-    # Keep the deployment health endpoint available to Render/load balancers.
-    if request.path == "/api/info":
+    # Health checks reveal no application or network details.
+    if request.path == "/health":
         return None
     password = os.environ.get("APP_PASSWORD", "")
     if not password:
@@ -56,6 +56,10 @@ def _db():
     conn.row_factory = sqlite3.Row
     try:
         yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -173,6 +177,11 @@ def api_lock_verify():
 @app.route("/")
 def index():
     return send_from_directory("static", "index.html")
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"ok": True})
 
 
 @app.route("/api/info", methods=["GET"])

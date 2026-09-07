@@ -1,4 +1,4 @@
-const CACHE = "cook-v1";
+const CACHE = "cook-v2";
 const STATIC = [
   "/",
   "/static/style.css",
@@ -40,12 +40,12 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // 静态资源：缓存优先
+  // 静态资源：网络优先，发布后优先获取最新的 JS 和 CSS。
   e.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((r) => {
+    fetch(req).then((r) => {
       const copy = r.clone();
       caches.open(CACHE).then((c) => c.put(req, copy));
       return r;
-    }))
+    }).catch(() => caches.match(req))
   );
 });

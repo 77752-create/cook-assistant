@@ -23,3 +23,12 @@ jobs:
         run: python -m compileall -q app.py core.py knowledge.py
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
+      - name: Run smoke test
+        run: python smoke_test.py
+      - name: Build Docker image
+        run: docker build -t cook-assistant .
+      - name: Start container and check health endpoint
+        run: |
+          docker run -d --name cook-assistant-test -p 8765:8765 \
+            -e APP_PASSWORD=test_password_here cook-assistant
+          curl --fail --retry 10 --retry-connrefused http://127.0.0.1:8765/health

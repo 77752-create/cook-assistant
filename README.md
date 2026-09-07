@@ -45,7 +45,7 @@ flowchart LR
 
 以下步骤适用于 Windows。需要先安装 [Python 3.12 或 3.13](https://www.python.org/downloads/windows/)，安装时勾选 “Add Python to PATH”。
 
-1. 下载项目并进入目录：
+1. 新手可从 [GitHub 下载 ZIP](https://github.com/77752-create/cook-assistant/archive/refs/heads/main.zip)，解压后进入 `cook-assistant-main` 文件夹。熟悉 Git 时，也可以运行：
 
    ```powershell
    git clone https://github.com/77752-create/cook-assistant.git
@@ -75,7 +75,7 @@ flowchart LR
 ### 视频文字从哪里来
 
 - **抖音**：只读取公开的 AI 文稿或视频描述。没有公开文字时，应用会给出原视频链接，不会下载抖音视频。
-- **B 站**：先读取字幕和简介。两者都没有时，开启“允许临时下载转写”后，应用会临时下载音频并在本机转写；任务结束后自动删除临时文件。
+- **B 站**：先读取字幕和简介。两者都没有时，应用会临时下载音频并在本机转写；任务结束后自动删除临时文件。“允许临时下载转写”默认开启，可在“设置”中关闭。
 - **首次本地转写**：`faster-whisper` 会下载 `small` 模型。保持网络连接，首次完成前不要关闭程序。若你已下载模型，可在 `config.json` 中将 `whisper_model_dir` 改为模型目录。
 
 视频文字可能漏掉用量、火候或食品安全细节。下厨前请回看原视频，并按食材实际情况调整。
@@ -92,7 +92,7 @@ Key 可以理解成 AI 服务商给你的账户钥匙。它只应放在你的电
 
 1. 用记事本打开项目目录里的 `config.json`。
 2. 在你使用的服务商控制台创建 API Key。
-3. 在下面三个字段中填入服务商提供的值：
+3. 使用 OpenAI 官方接口时，只填写 `openai_api_key`，保留默认 `llm_model`，并让 `openai_base_url` 保持为空。使用第三方兼容服务时，再从该服务商文档复制 API 地址和文本模型名：
 
    ```json
    {
@@ -116,8 +116,8 @@ Key 可以理解成 AI 服务商给你的账户钥匙。它只应放在你的电
 
 | 环境变量 | 填什么 |
 | --- | --- |
-| `STT_API_KEY` | 支持音频转写的服务商 Key |
-| `STT_BASE_URL` | 该服务商的 OpenAI 兼容地址；使用 OpenAI 官方接口时留空 |
+| `STT_API_KEY` | 支持音频转写的服务商 Key；为空时会使用 `OPENAI_API_KEY` |
+| `STT_BASE_URL` | 该服务商的 OpenAI 兼容地址；不会自动复用 `OPENAI_BASE_URL`，使用 OpenAI 官方接口时留空 |
 | `STT_MODEL` | 服务商提供的转写模型名，例如 `gpt-4o-transcribe` |
 
 文本聊天服务不一定支持音频转写。若服务商没有 Audio Transcriptions 或“音频转文字”接口，不要把它的地址填到 `STT_BASE_URL`。
@@ -161,7 +161,7 @@ docker run -d --name cook-assistant --restart unless-stopped -p 8765:8765 \
 
 1. 在 Render 创建 **Blueprint**，选择本项目仓库。
 2. Render 会读取 `render.yaml` 并构建 Web Service。
-3. 在服务的 **Environment** 页面添加 `APP_PASSWORD`。需要 AI 整理或云端转写时，再按上一节添加对应变量。
+3. 创建 Blueprint 时，Render 会要求填写 `APP_PASSWORD`。需要 AI 整理或云端转写时，再按上一节添加对应变量。
 4. 部署完成后，打开 Render 提供的网址。
 
 当前 `render.yaml` 使用免费 Web Service。免费实例的文件系统会在重启或重新部署后清空，`recipes.db` 不能长期保存。Render 的持久磁盘仅适用于付费 Web Service；如需保留云端菜谱，把磁盘挂载到 `/data`，或定期从“设置”导出 JSON 备份。
@@ -208,7 +208,7 @@ python -m unittest discover -s tests -v
 python smoke_test.py
 ```
 
-GitHub Actions 会在每次推送和 Pull Request 时运行同一组编译与单元测试。
+GitHub Actions 会在每次推送和 Pull Request 时编译代码、运行单元测试和冒烟测试，并构建 Docker 镜像后检查 `/health`。真实的视频平台检索与转写依赖外部网络和账号配置，不在 CI 中运行。
 
 ## 安全
 

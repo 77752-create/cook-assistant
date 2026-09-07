@@ -41,7 +41,7 @@ DEFAULTS = {
     "settings_pin_hash": "",
     # 传模型名时 faster-whisper 会在首次使用时下载模型；也可填写已有模型目录。
     "whisper_model_dir": "small",
-    "mediacrawler_dir": r"D:\AI\codex\MediaCrawler",
+    "mediacrawler_dir": "",
 }
 
 
@@ -130,14 +130,14 @@ def looks_like_recipe(text):
 
 
 def http_client():
-    return httpx.Client(timeout=30, verify=False, follow_redirects=True,
+    return httpx.Client(timeout=30, follow_redirects=True,
                         headers={"User-Agent": UA_CHROME, "Accept-Language": "zh-CN,zh;q=0.9"})
 
 
 def _client_mobile():
     ua = ("Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) "
           "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1")
-    return httpx.Client(timeout=25, verify=False, follow_redirects=True,
+    return httpx.Client(timeout=25, follow_redirects=True,
                         headers={"User-Agent": ua, "Accept-Language": "zh-CN,zh;q=0.9"})
 
 
@@ -295,12 +295,11 @@ def search_douyin(keyword, limit=8):
     return {"ok": True, "items": items}
 
 
-NODE_BIN = r"C:\Users\deng\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin"
 _MC_FAIL_UNTIL = 0.0
 
 
 def _mc_venv_python():
-    mc = load_config().get("mediacrawler_dir") or r"D:\AI\codex\MediaCrawler"
+    mc = load_config().get("mediacrawler_dir", "")
     venv_py = os.path.join(mc, "venv", "Scripts", "python.exe")
     if os.path.isdir(mc) and os.path.exists(venv_py) and os.path.exists(os.path.join(mc, "main.py")):
         return mc, venv_py
@@ -322,7 +321,9 @@ def search_douyin_mc(keyword, limit=8):
     out_dir = tempfile.mkdtemp(prefix="mc_dy_")
     try:
         env = dict(os.environ)
-        env["PATH"] = NODE_BIN + os.pathsep + env.get("PATH", "")
+        node = shutil.which("node")
+        if node:
+            env["PATH"] = os.path.dirname(node) + os.pathsep + env.get("PATH", "")
         cmd = [venv_py, "main.py",
                "--platform", "dy", "--lt", "cookie", "--cookies", cookie,
                "--type", "search", "--keywords", keyword,
@@ -468,7 +469,7 @@ def download_audio(url, out_dir, cookie=""):
     """用 yt-dlp 下载音频到临时目录，返回文件路径"""
     out_tpl = os.path.join(out_dir, "audio.%(ext)s")
     cmd = [sys.executable, "-m", "yt_dlp", "-f", "ba/b", "-o", out_tpl,
-           "--no-playlist", "--no-warnings", "--no-check-certificate"]
+           "--no-playlist", "--no-warnings"]
     ff = _ffmpeg_location()
     if ff:
         cmd += ["--ffmpeg-location", ff]
@@ -481,7 +482,7 @@ def download_audio(url, out_dir, cookie=""):
         return os.path.join(out_dir, files[0])
     # 音频流不可用，下载完整视频再抽音频
     cmd2 = [sys.executable, "-m", "yt_dlp", "-f", "bv*+ba/b", "-o", out_tpl,
-            "--no-playlist", "--no-warnings", "--no-check-certificate"]
+            "--no-playlist", "--no-warnings"]
     if ff:
         cmd2 += ["--ffmpeg-location", ff]
     if cookie:
