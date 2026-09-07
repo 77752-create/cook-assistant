@@ -39,7 +39,8 @@ DEFAULTS = {
     "allow_temp_download": True,
     "use_mediacrawler": False,
     "settings_pin_hash": "",
-    "whisper_model_dir": os.path.join(os.path.expanduser("~"), ".cache", "faster-whisper", "small"),
+    # 传模型名时 faster-whisper 会在首次使用时下载模型；也可填写已有模型目录。
+    "whisper_model_dir": "small",
     "mediacrawler_dir": r"D:\AI\codex\MediaCrawler",
 }
 
@@ -502,10 +503,15 @@ def get_whisper_model(model_dir):
     with _WHISPER_LOCK:
         if _WHISPER_MODEL is None:
             from faster_whisper import WhisperModel
-            if not os.path.isdir(model_dir):
-                raise RuntimeError("找不到语音识别模型目录：%s" % model_dir)
-            _WHISPER_MODEL = WhisperModel(model_dir, device="cpu",
-                                          compute_type="int8", cpu_threads=4)
+            model_source = (model_dir or "small").strip()
+            try:
+                _WHISPER_MODEL = WhisperModel(model_source, device="cpu",
+                                              compute_type="int8", cpu_threads=4)
+            except Exception as exc:
+                raise RuntimeError(
+                    "无法准备本地语音模型。请检查网络，或在 config.json 的 "
+                    "whisper_model_dir 中填写已下载的模型目录。"
+                ) from exc
     return _WHISPER_MODEL
 
 
@@ -543,7 +549,7 @@ def transcribe_remote(audio_path, progress=None):
     key = (cfg.get("stt_api_key") or cfg.get("openai_api_key") or "").strip()
     if not key:
         raise RuntimeError(
-            "云端模式转写需要 OpenAI 兼容 API Key：请在设置里填写（语音识别目前仅 OpenAI 官方接口支持）")
+            "云端模式转写需要支持音频转写的 API Key：请在环境变量或 config.json 中配置。")
     if progress:
         progress("正在用云端语音识别转写...")
     from openai import OpenAI

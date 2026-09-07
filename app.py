@@ -11,6 +11,7 @@ import threading
 import time
 import uuid
 import webbrowser
+from contextlib import contextmanager
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -49,10 +50,14 @@ def require_app_password():
     return ("需要访问密码。", 401, {"WWW-Authenticate": 'Basic realm="Cook Assistant"'})
 
 
+@contextmanager
 def _db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def _init_db():

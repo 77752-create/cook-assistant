@@ -7,8 +7,5 @@
   "stt_model": "gpt-4o-transcribe",
   "douyin_cookie": "",
   "allow_temp_download": true,
-  "use_mediacrawler": false,
-  "settings_pin_hash": "",
-  "whisper_model_dir": "",
-  "mediacrawler_dir": ""
+  "use_mediacrawler": false
 }
