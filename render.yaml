@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cook-assistant
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/info
+    envVars:
+      - key: CLOUD_MODE
+        value: "1"

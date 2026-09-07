@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.err
+tests_*.py
+_*.txt
+cache
+notes
+菜谱
+recipes.db
+config.json
+*.log
+*.sqlite
+*.sqlite3
+venv
+.git

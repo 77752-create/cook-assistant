@@ -1,0 +1,25 @@
+# Local state and credentials — never commit these files.
+config.json
+recipes.db
+*.db-journal
+*.log
+*.err
+
+# Python caches and test artefacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local-only helpers and downloaded/generated content
+cache/
+菜谱/
+notes/
+_*.py
+_*.txt
+tests_*.py
+
+# Editor and virtual environment files
+.venv/
+venv/
+.idea/
+.vscode/

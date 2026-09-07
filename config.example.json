@@ -1,0 +1,14 @@
+{
+  "openai_api_key": "",
+  "openai_base_url": "",
+  "llm_model": "gpt-4o-mini",
+  "stt_api_key": "",
+  "stt_base_url": "",
+  "stt_model": "gpt-4o-transcribe",
+  "douyin_cookie": "",
+  "allow_temp_download": true,
+  "use_mediacrawler": false,
+  "settings_pin_hash": "",
+  "whisper_model_dir": "",
+  "mediacrawler_dir": ""
+}

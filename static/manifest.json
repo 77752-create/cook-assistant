@@ -1,0 +1,14 @@
+{
+  "name": "做菜助手",
+  "short_name": "做菜助手",
+  "description": "搜做菜视频、提取文字、整理成带原理的菜谱",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F6F3",
+  "theme_color": "#F7F6F3",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
