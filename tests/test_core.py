@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+import time
 import types
 import unittest
 from unittest.mock import patch
@@ -88,6 +89,41 @@ class AppTests(unittest.TestCase):
         }
 
         self.assertEqual(app._safe_config(config), {"llm_model": "demo-model"})
+
+    def test_api_errors_are_generic_and_do_not_leak_exception_text(self):
+        response = self.client.post("/api/generate", json={"result": ["bad"]})
+
+        self.assertEqual(response.status_code, 500)
+        payload = response.get_json()
+        self.assertFalse(payload["ok"])
+        self.assertIn("稍后重试", payload["error"])
+        self.assertNotIn("list", payload["error"])
+
+    def test_api_method_not_allowed_preserves_405(self):
+        response = self.client.put("/api/search")
+
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(response.get_json()["ok"])
+
+    def test_background_job_errors_are_generic_and_traceable(self):
+        job_id = app._new_job(lambda: (_ for _ in ()).throw(ValueError("private failure")))
+        payload = None
+        for _ in range(20):
+            payload = self.client.get(f"/api/job/{job_id}").get_json()
+            if payload["status"] == "error":
+                break
+            time.sleep(0.01)
+
+        self.assertEqual(payload["status"], "error")
+        self.assertIn("稍后重试", payload["error"])
+        self.assertNotIn("private failure", payload["error"])
+        self.assertTrue(payload.get("error_id"))
+
+    def test_deleting_missing_recipe_returns_404(self):
+        response = self.client.delete("/api/recipes/999999")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(response.get_json()["ok"])
 
 
 if __name__ == "__main__":

@@ -40,6 +40,9 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
+  // API responses can contain private, changing data; keep them network-only.
+  if (!url.pathname.startsWith("/static/")) return;
+
   // 静态资源：网络优先，发布后优先获取最新的 JS 和 CSS。
   e.respondWith(
     fetch(req).then((r) => {

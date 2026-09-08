@@ -21,6 +21,11 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Compile application modules
         run: python -m compileall -q app.py core.py knowledge.py
+      - name: Validate release metadata
+        run: |
+          test -s VERSION
+          grep -q "^## \[0.1.0\]" CHANGELOG.md
+          git diff --check
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Run smoke test

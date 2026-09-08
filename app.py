@@ -94,10 +94,13 @@ def _run_job(job_id, fn):
             with JOBS_LOCK:
                 JOBS[job_id]["status"] = "done"
                 JOBS[job_id]["result"] = result
-        except Exception as e:
+        except Exception:
+            error_id = uuid.uuid4().hex[:12]
+            app.logger.exception("Background job failed id=%s error_id=%s", job_id, error_id)
             with JOBS_LOCK:
                 JOBS[job_id]["status"] = "error"
-                JOBS[job_id]["error"] = str(e)
+                JOBS[job_id]["error"] = "任务失败，请稍后重试"
+                JOBS[job_id]["error_id"] = error_id
     t = threading.Thread(target=worker, daemon=True)
     t.start()
 
@@ -225,7 +228,8 @@ def api_job_status(job_id):
         if not job:
             return jsonify({"ok": False, "error": "任务不存在"})
         return jsonify({"ok": True, "status": job["status"], "stage": job["stage"],
-                        "error": job.get("error", ""), "result": job.get("result")})
+                        "error": job.get("error", ""), "error_id": job.get("error_id", ""),
+                        "result": job.get("result")})
 
 
 @app.route("/api/generate", methods=["POST"])
@@ -295,7 +299,9 @@ def api_recipes():
 def api_recipe(rid):
     if request.method == "DELETE":
         with _db() as conn:
-            conn.execute("DELETE FROM recipes WHERE id=?", (rid,))
+            cur = conn.execute("DELETE FROM recipes WHERE id=?", (rid,))
+        if cur.rowcount == 0:
+            return jsonify({"ok": False, "error": "菜谱不存在"}), 404
         return jsonify({"ok": True})
     with _db() as conn:
         row = conn.execute("SELECT * FROM recipes WHERE id=?", (rid,)).fetchone()
@@ -374,10 +380,23 @@ def api_not_found(e):
     return e
 
 
+@app.errorhandler(405)
+def api_method_not_allowed(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"ok": False, "error": "请求方式不支持"}), 405
+    return e
+
+
 @app.errorhandler(Exception)
 def api_error(e):
     if request.path.startswith("/api/"):
-        return jsonify({"ok": False, "error": "服务出错：%s" % e}), 500
+        error_id = uuid.uuid4().hex[:12]
+        app.logger.exception("Unhandled API error id=%s path=%s", error_id, request.path)
+        return jsonify({
+            "ok": False,
+            "error": "服务暂时不可用，请稍后重试",
+            "error_id": error_id,
+        }), 500
     raise e
 
 

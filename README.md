@@ -10,7 +10,8 @@
   <a href="#开始使用">开始使用</a> ·
   <a href="#配置-ai-key">配置 AI Key</a> ·
   <a href="#部署到云端">部署到云端</a> ·
-  <a href="#项目结构">项目结构</a>
+  <a href="#项目结构">项目结构</a> ·
+  <a href="CHANGELOG.md">更新记录</a>
 </p>
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -184,6 +185,7 @@ docker run -d --name cook-assistant --restart unless-stopped -p 8765:8765 \
 - **前端**：原生 HTML、CSS、JavaScript，支持手机页面和渐进式 Web 应用（PWA）安装
 - **安全**：`config.json`、Cookie、日志和个人菜谱数据库均被 Git 忽略；接口不会把 Key 或 Cookie 返回给浏览器
 - **可用性**：长任务在后台线程运行，前端轮询进度；失败时返回可读错误
+- **版本**：当前版本见根目录 `VERSION`，发布记录见 `CHANGELOG.md`
 
 ## 项目结构
 
@@ -196,6 +198,10 @@ tests/                 无网络单元测试
 config.example.json    安全配置模板
 Dockerfile             容器构建文件
 render.yaml            Render Blueprint
+VERSION                当前版本号
+CHANGELOG.md           版本变更记录
+CONTRIBUTING.md        分支、提交和 Pull Request 规范
+SECURITY.md            安全问题报告与部署边界
 ```
 
 ## 验证
@@ -213,6 +219,8 @@ GitHub Actions 会在每次推送和 Pull Request 时编译代码、运行单元
 ## 安全
 
 不要提交 `config.json`、`recipes.db`、Cookie、日志或 API Key。发现安全问题时，请不要在公开 Issue 中附上凭据或复现数据。
+
+开发贡献请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题请阅读 [SECURITY.md](SECURITY.md)。
 
 ## 许可证
 
