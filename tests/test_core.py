@@ -88,7 +88,13 @@ class AppTests(unittest.TestCase):
             "llm_model": "demo-model",
         }
 
-        self.assertEqual(app._safe_config(config), {"llm_model": "demo-model"})
+        safe = app._safe_config(config)
+
+        self.assertEqual(safe["llm_model"], "demo-model")
+        self.assertTrue(safe["openai_key_configured"])
+        self.assertNotIn("openai_api_key", safe)
+        self.assertNotIn("douyin_cookie", safe)
+        self.assertNotIn("stt_api_key", safe)
 
     def test_api_errors_are_generic_and_do_not_leak_exception_text(self):
         response = self.client.post("/api/generate", json={"result": ["bad"]})

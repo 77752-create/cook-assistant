@@ -32,7 +32,9 @@ SENSITIVE_CONFIG_KEYS = {"openai_api_key", "douyin_cookie", "stt_api_key"}
 
 def _safe_config(cfg):
     """Never send credentials to a browser, even after settings are unlocked."""
-    return {k: v for k, v in cfg.items() if k not in SENSITIVE_CONFIG_KEYS}
+    safe = {k: v for k, v in cfg.items() if k not in SENSITIVE_CONFIG_KEYS}
+    safe["openai_key_configured"] = bool(cfg.get("openai_api_key", "").strip())
+    return safe
 
 
 @app.before_request

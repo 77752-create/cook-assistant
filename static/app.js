@@ -479,6 +479,34 @@ async function renderSettings() {
     </div>
 
     <div class="set-group anim-in" style="--i:3">
+      <div class="set-label">AI 菜谱整理（可选）</div>
+      <div class="set-card">
+        <div class="set-row">
+          <div>
+            <div class="sr-title">文本 AI Key</div>
+            <div id="cfg-key-state" class="sr-desc">不填写也能使用本地规则整理</div>
+          </div>
+        </div>
+        <div class="field">
+          <input id="cfg-ai-key" type="password" autocomplete="new-password" spellcheck="false"
+            placeholder="粘贴 API Key；留空不会覆盖已保存的 Key">
+        </div>
+        <div class="field">
+          <input id="cfg-ai-base" type="url" autocomplete="off" spellcheck="false"
+            placeholder="Base URL（OpenAI 官方接口可留空）">
+        </div>
+        <div class="field">
+          <input id="cfg-ai-model" type="text" autocomplete="off"
+            placeholder="模型名称，例如 gpt-4o-mini">
+        </div>
+        <div class="btn-row">
+          <button id="btn-clear-ai-key" class="btn">清除已保存的 Key</button>
+        </div>
+        <div id="ai-key-status"></div>
+      </div>
+    </div>
+
+    <div class="set-group anim-in" style="--i:4">
       <div class="set-label">访问密码</div>
       <div class="set-card">
         <div class="set-row">
@@ -490,7 +518,7 @@ async function renderSettings() {
       </div>
     </div>
 
-    <div class="set-group anim-in" style="--i:4">
+    <div class="set-group anim-in" style="--i:5">
       <div class="set-label">菜谱数据</div>
       <div class="set-card">
         <div class="btn-row"><button id="btn-backup" class="btn">备份菜谱（下载）</button></div>
@@ -500,7 +528,7 @@ async function renderSettings() {
       </div>
     </div>
 
-    <div class="set-group anim-in" style="--i:5">
+    <div class="set-group anim-in" style="--i:6">
       <div class="set-label">安装到手机桌面</div>
       <div class="set-card">
         <div class="set-row"><div><div class="sr-title">iPhone</div><div class="sr-desc">Safari 分享按钮 → 添加到主屏幕</div></div></div>
@@ -515,6 +543,11 @@ async function renderSettings() {
   if (c.ok) {
     document.getElementById("cfg-temp").checked = c.config.allow_temp_download !== false;
     document.getElementById("cfg-mc").checked = c.config.use_mediacrawler === true;
+    document.getElementById("cfg-ai-base").value = c.config.openai_base_url || "";
+    document.getElementById("cfg-ai-model").value = c.config.llm_model || "";
+    document.getElementById("cfg-key-state").textContent = c.config.openai_key_configured
+      ? "已配置。为保护安全，已保存的 Key 不会显示在页面上。"
+      : "未配置。留空也能使用本地规则整理。";
   }
   const info = await getJson("/api/info");
   const lanBox = document.getElementById("lan-rows");
@@ -531,6 +564,13 @@ async function renderSettings() {
     const box = document.getElementById("pin-status2");
     box.innerHTML = statusHTML(r.ok ? "访问密码已更新" : (r.error || "保存失败"), r.ok ? "info" : "error");
     setTimeout(() => { box.innerHTML = ""; }, 3000);
+  });
+  $bind("btn-clear-ai-key", "click", async () => {
+    if (!window.confirm("确定清除已保存的文本 AI Key 吗？之后会改用本地规则整理。")) return;
+    const r = await lockedPost("/api/config", { openai_api_key: "" });
+    const box = document.getElementById("ai-key-status");
+    box.innerHTML = statusHTML(r.ok ? "AI Key 已清除" : (r.error || "清除失败"), r.ok ? "info" : "error");
+    if (r.ok) document.getElementById("cfg-key-state").textContent = "未配置。留空也能使用本地规则整理。";
   });
   $bind("btn-backup", "click", async () => {
     const r = await getJson("/api/recipes/export");
@@ -565,10 +605,18 @@ async function saveConfig() {
   const body = {
     allow_temp_download: document.getElementById("cfg-temp").checked,
     use_mediacrawler: document.getElementById("cfg-mc").checked,
+    openai_base_url: $val("cfg-ai-base"),
+    llm_model: $val("cfg-ai-model"),
   };
+  const apiKey = $val("cfg-ai-key");
+  if (apiKey) body.openai_api_key = apiKey;
   const r = await lockedPost("/api/config", body);
   const box = document.getElementById("cfg-status");
   box.innerHTML = statusHTML(r.ok ? "设置已保存" : "保存失败", r.ok ? "info" : "error");
+  if (r.ok && apiKey) {
+    document.getElementById("cfg-ai-key").value = "";
+    document.getElementById("cfg-key-state").textContent = "已配置。为保护安全，已保存的 Key 不会显示在页面上。";
+  }
   setTimeout(() => { box.innerHTML = ""; }, 2600);
 }
 
