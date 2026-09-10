@@ -24,7 +24,8 @@ jobs:
       - name: Validate release metadata
         run: |
           test -s VERSION
-          grep -q "^## \[0.1.0\]" CHANGELOG.md
+          version="$(tr -d '\r\n' < VERSION)"
+          grep -q "^## \[$version\]" CHANGELOG.md
           git diff --check
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
